@@ -1,10 +1,47 @@
-//Aim: to create an array of objects. Each object will have a 'docid' and a 'text' string.
+//Aim: to create an array of objects. Each object will have a 'title' and a 'text' string.
 
-function fetchDocument() {
+//Define global variables.
 
+var fileNames, howFisCorpus = [];
+
+//Define a function that takes an xml document, extracts the title and text, and converts it into a JavaScript object.
+function getText(xml) {
+  var doc, title, paras, i, j, text = "";
+  doc = xml.responseXML;
+  try {
+    title = doc.querySelectorAll("h1.work-title")[0].innerHTML;
+  }
+  catch(err) {
+    console.log(xml)
+  }
+  paras = doc.getElementsByTagName("p"); //Get the paragraphs
+  for (i = 0; i < paras.length; i++) { //Loop through them
+    for (j = 0; j <paras[i].childNodes.length; j++) { //Loop through each paragraph's text nodes.
+      if (paras[i].childNodes[j].nodeValue !== null){ //Skip nodes with no text value.
+        text += paras[i].childNodes[j].nodeValue //Add text to string for whole document.
+      }
+    }
+  }
+  //Add the loaded document to the corpus.
+  howFisCorpus.push({"title":title, "text":text});
 }
 
-var fileNames = ['HowFisPapers/xm10-icdms-lowres.xhtml',
+//Define a function for fetching xml docs from the server.
+function fetchDocument(fileName) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      //When the data is ready, return it as an xml document, and pass it to getText().
+      getText(this);
+      //test = this;
+    }
+  };
+  xhttp.open("GET", fileName, true);
+  xhttp.send();
+}
+
+//Create an array of file names.
+fileNames = ['HowFisPapers/xm10-icdms-lowres.xhtml',
 'HowFisPapers/xm100-icdms-lowres.xhtml',
 'HowFisPapers/xm105-icdms-lowres.xhtml',
 'HowFisPapers/xm106-icdms-lowres.xhtml',
@@ -105,3 +142,8 @@ var fileNames = ['HowFisPapers/xm10-icdms-lowres.xhtml',
 'HowFisPapers/xm96-icdms-lowres.xhtml',
 'HowFisPapers/xm97-icdms-lowres.xhtml',
 'HowFisPapers/xm98-icdms-lowres.xhtml', ]
+
+//Now loop through the array of file names, and import the whole corpus.
+fileNames.forEach(function(element){
+  fetchDocument(element);
+})
