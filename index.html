@@ -5,9 +5,8 @@
 </head>
 <body>
   <h1>Search for Australian Words in the Howitt-Fison Corpus</h1>
-  <form>
-    <input type="text" id="searchTerm"> <br>
-    <input type="submit" id="submit">
-  </form>
+  <p>Enter Search Term: <input type="text" id="searchTerm" value="Hello!" onchange="runSearch()"></p>
+  <button id="searchButton" onclick="runSearch()">Search</button>
+  <p id="result"></p>
 </body>
 </html>
