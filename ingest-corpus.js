@@ -3,27 +3,27 @@
 //Define global variables.
 
 var fileNames, howFisCorpus = [];
+//var test;
 
 //Define a function that takes an xml document, extracts the title and text, and converts it into a JavaScript object.
 function getText(xml) {
-  var doc, title, paras, i, j, text = "";
+  var doc, title, paras, i, j, text = "", tokens, empties;
   doc = xml.responseXML;
-  try {
-    title = doc.querySelectorAll("h1.work-title")[0].innerHTML;
+  title = doc.querySelectorAll("h1.work-title")[0].innerHTML;
+  paras = doc.getElementsByTagName("p"); //Get the paragraphs...
+  for (i = 0; i < paras.length; i++) { //Loop through them...
+    text += paras[i].innerText; //Grab the text...
   }
-  catch(err) {
-    console.log(xml)
-  }
-  paras = doc.getElementsByTagName("p"); //Get the paragraphs
-  for (i = 0; i < paras.length; i++) { //Loop through them
-    for (j = 0; j <paras[i].childNodes.length; j++) { //Loop through each paragraph's text nodes.
-      if (paras[i].childNodes[j].nodeValue !== null){ //Skip nodes with no text value.
-        text += paras[i].childNodes[j].nodeValue //Add text to string for whole document.
-      }
+  //Tokenise the text. This is a really simple tokeniser that just splits on space characters.
+  tokens = text.split(/\s/)
+  //Loop backwards through the array and delete empty strings.
+  for (i = tokens.length - 1; i >= 0; i--) {
+    if (tokens[i].length === 0) {
+      tokens.splice(i, 1);
     }
   }
   //Add the loaded document to the corpus.
-  howFisCorpus.push({"title":title, "text":text});
+  howFisCorpus.push({"title":title, "text":text, "tokens":tokens});
 }
 
 //Define a function for fetching xml docs from the server.
