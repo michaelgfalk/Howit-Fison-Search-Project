@@ -135,7 +135,11 @@ function findMatches(corpus, searchTerm, context = 10) {
   $("#content").empty();
   //Clear old headering an add a new one.
   $("#resHeading").empty();
-  $("#resHeading").append($("<h2></h2>").text(results.length + " results found for '" + searchTerm + "':"));
+  if (results.length === 1) {
+    $("#resHeading").append($("<h2></h2>").text("1 result found for '" + searchTerm + "':"));
+  } else {
+    $("#resHeading").append($("<h2></h2>").text(results.length + " results found for '" + searchTerm + "':"));
+  }
   //Add a container for the search results.
   $("#content").append("<div id='results'></div>");
   results.forEach(function(result, index) {
