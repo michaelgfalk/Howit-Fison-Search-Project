@@ -51,7 +51,7 @@ function convertSearchTerm(searchTerm) {
       regexStr += "(?:ah|ar|a|u)";
       break;
       case "3":
-      regexStr += "(?:oo|u)";
+      regexStr += "(?:oo|u|\\u{016C})";
       break;
       case "4":
       regexStr += "(?:rn|nh|ny|nj|n){1,2}";
