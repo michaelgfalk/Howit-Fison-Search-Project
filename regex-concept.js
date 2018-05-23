@@ -1,16 +1,12 @@
-/* This is a different idea. What if the user's search term was turned into
-a regular expression, which was then used to search through all the documents
-on the server?
-
-This would mean that the data would not have to undergo any pre-processing. In
-addition, we could use the existing structure of the xhtml files to present
-the results of the search.*/
+/* This script takes the user's search term and turns it into a regular expression, which can then be used to search through the corpus object to find possible matches. The results are ordered by the edit distance between the search term and the matched term. */
 
 //Function 1: gets the input from the search box and passes it to the other functions.
 function runSearch() {
   var searchTerm;
   searchTerm = document.getElementById("searchTerm").value;
   findMatches(howFisCorpus, searchTerm, 10);
+  //Then scroll back to the top of the page.
+  window.scroll(0, 0);
 }
 
 //Function 2: turns the user's search term into a regex according to the given sound equivalences.
@@ -28,8 +24,8 @@ function convertSearchTerm(searchTerm) {
     return($1);
   }) //replace any repeated consonants except 'r' with a single one.
   .replace(/(p|b)/g, "7")
-  .replace(/(g|k)/g, "K")
-  .replace(/(dh|ty|dy|rd|rt|t|d|j)/g, "8")
+  .replace(/(g|k|c|ck)/g, "K")
+  .replace(/(dh|ty|dy|rd|rt|t|d|j|th)/g, "8")
   .replace(/(rl|lh|ly|l)/g, "5")
   .replace(/(rn|nh|ny|nj|n)/g, "4")
   .replace(/(ah|ar|a)/g, "2")
@@ -66,10 +62,10 @@ function convertSearchTerm(searchTerm) {
       regexStr += "(?:p|b){1,2}";
       break;
       case "K":
-      regexStr += "(?:g|k){1,2}";
+      regexStr += "(?:g|k|c|ck){1,2}";
       break;
       case "8":
-      regexStr += "(?:dh|ty|dy|rd|rt|t|d|j){1,2}";
+      regexStr += "(?:dh|ty|dy|rd|rt|t|d|j|th){1,2}";
       break;
       case "9":
       regexStr += "rr";
@@ -133,9 +129,13 @@ function findMatches(corpus, searchTerm, context = 10) {
 
   //Clear the previous results.
   $("#content").empty();
-  //Clear old headering an add a new one.
+  //Clear old heading and add a new one.
   $("#resHeading").empty();
-  $("#resHeading").append($("<h2></h2>").text(results.length + " results found for '" + searchTerm + "':"));
+  if (results.length === 1) {
+    $("#resHeading").append($("<h2></h2>").text("1 result found for '" + searchTerm + "':"));
+  } else {
+    $("#resHeading").append($("<h2></h2>").text(results.length + " results found for '" + searchTerm + "':"));
+  }
   //Add a container for the search results.
   $("#content").append("<div id='results'></div>");
   results.forEach(function(result, index) {
@@ -147,7 +147,7 @@ function findMatches(corpus, searchTerm, context = 10) {
     //Highlight the key term in the kwic output.
     kwicOut = result.kwic.replace(regex, (match, p1) => "<mark>" + p1 + "</mark>")
     $(resID).append("<p class='kwic'>" + kwicOut + "</p>");
-    $(resID).append($("<p class='title'></p>").text("From document: " + result.title));
+    $(resID).append($("<p class='title'></p>").text("From: document " + result.title));
   })
 
   return results;
@@ -206,9 +206,4 @@ function compScores(a,b) {
     return 1;
   }
   return 0;
-}
-
-//Function 6: highlights a term that matches a given regex.
-function highLight(regex, string){
-
 }
