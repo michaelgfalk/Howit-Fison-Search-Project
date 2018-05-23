@@ -13,7 +13,7 @@ cd ~/directory
 python -m http.server 8000 &.
 ```
 ### On a PC:
-Open the Terminal. If the directory where you had stored this code was C:\\directory, you would then type these commands:
+Open Command Prompt. If the directory where you had stored this code was C:\\directory, you would then type these commands:
 ```
 cd C:\\directory
 python -m http.server 8000 &.
