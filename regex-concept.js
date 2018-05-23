@@ -17,7 +17,8 @@ function convertSearchTerm(searchTerm) {
   var phonemes, regexStr = "", regex;
   //Step 1: Process the search term, turning it into an array that can be converted into a regular expression.
   phonemes = searchTerm.toLowerCase() //Convert to lower case.
-  .replace(/[\u{0000}-\u{0040}\u{005B}-\u{0060}\u{007B}-\u{007E}]/gu, "") //remove punctuation. The unicode notation has to be used in order to avoid removing special characters like 'ŋ'.
+  .replace(/\s/g, "S") //catch all whitespace characters (this is essential for handling search terms that are phrases)
+  .replace(/[\u{0000}-\u{0040}\u{005B}-\u{0060}\u{007B}-\u{007E}]/gu, "") //remove punctuation and leave spaces. The unicode notation has to be used in order to avoid removing special characters like 'ŋ'.
   .replace(/(\u{014b}|ng)/gu, "6")
   .normalize('NFD').replace(/[\u{0300}-\u{036f}]/gu, "") //Remove the diacritics. 'normalize('NFD') decomposes all the diacritics (e.g. 'è' -> 'e + `'). Then the replace function strips out all the symbols.
   .replace(/rr/g, "9")
@@ -28,7 +29,7 @@ function convertSearchTerm(searchTerm) {
   }) //replace any repeated consonants except 'r' with a single one.
   .replace(/(p|b)/g, "7")
   .replace(/(g|k|c|ck)/g, "K")
-  .replace(/(dh|ty|dy|rd|rt|t|d|j|th)/g, "8")
+  .replace(/(dh|ty|dy|rd|rt|t|d|j)/g, "8")
   .replace(/(rl|lh|ly|l)/g, "5")
   .replace(/(rn|nh|ny|nj|n)/g, "4")
   .replace(/(ah|ar|a)/g, "2")
@@ -68,10 +69,13 @@ function convertSearchTerm(searchTerm) {
       regexStr += "(?:g|k|c|ck){1,2}";
       break;
       case "8":
-      regexStr += "(?:dh|ty|dy|rd|rt|t|d|j|th){1,2}";
+      regexStr += "(?:dh|ty|dy|rd|rt|t|d|j){1,2}";
       break;
       case "9":
       regexStr += "rr";
+      break;
+      case "S":
+      regexStr += ".+\\s";
       break;
       default:
       //If no sound transformation has been performed on a particular character, then it is included untransformed in the regex.
@@ -89,39 +93,55 @@ function convertSearchTerm(searchTerm) {
 }
 
 //Function 3: finds text matches in the corpus object, then produces a list of results and pushes it to the DOM. The 'corpus' must be an array of objects, each of which has the properties 'title' and 'text'. The optional 'context' parameter defines how much text to display in the results.
-function findMatches(corpus, searchTerm, context = 10) {
-  var regex, results = [];
+function findMatches(corpus, searchTerm, context = 15) {
+  var regex, results = [], addTerms;
+  //First, we need to deal with the possiblity of a phrase.
+  if (/\s/g.test(searchTerm) === false) {
+    //If there are no spaces, then the number of additional terms is 0.
+    addTerms = 0
+  } else {
+    //If there are spaces, then this is a phrase. To caculate the number of additional terms in the phrase, simply count the number of spaces. (A two-word phrase will have one additional term, and also one space.)
+    addTerms = searchTerm.match(/\s/g).length
+  }
   regex = convertSearchTerm(searchTerm);
   //Loop through each item in the corpus
   corpus.forEach(function(doc) {
     //Create two new variables. 'hits' will be an array of strings. Each string will contain the hit and some context words either side. 'scores' will be an array of numbers. Each number will be the string matching score of that hit. These will be pushed to the 'results' array.
     var tokens = doc.tokens;
     tokens.forEach(function(word, i) {
-      var hitArr = [], hitStr, score, right;
-      if (regex.test(word)) { //Does the word match the regex? If so...
+      var matchPhrase, hitArr = [], hitStr, score, left;
+      matchPhrase = word //Add the first search term to the matchPhrase
+      if (addTerms > 0) {
+        //If there are additional words in the search string, add a corresponding number to the matchPhrase to create an n-gram.
+        for (j = 1; j <= addTerms; j++) {
+          matchPhrase += " ";
+          matchPhrase += tokens[i + j];
+        }
+      }
+      if (regex.test(matchPhrase)) { //Does the word/phrase match the regex? If so...
 
         //Step 1: Grab the hit and add context words either side.
-        //The if-else block ensures that the algorithm still works even if the hit is near the start or end of the text. It sets the rightmost boundary of the context block.
-        if (i + context > tokens.length) {
-          right = tokens.length;
+        //The if-else block ensures that the algorithm still works even if the hit is near the start or end of the text. It sets the leftmost boundary of the context block.
+        if (i - context <= 0) {
+          left = 0;
         } else {
-          right = i + context;
+          left = i - context;
         }
-        //Once the rightmost boundary is set, loop backwards through the array from the rightmost boundary to the leftmost boundary, or to the start of the array, whichever is sooner. Add the token at each point to the 'hits' array.
-        for (j = right; (j >= 0 && j >= right - context * 2); j--) {
-          hitArr.push(tokens[j]);
+        //Once the leftmost boundary is set, work forwards, adding words to the array until either it reaches the end or the required number of context words are included.
+        for (k = left; (k < tokens.length && k <= left + context * 2); k++) {
+          hitArr.push(tokens[k]);
         }
         //Then convert to a string.
         hitStr = "... " + hitArr.join(" ") + " ...";
 
         //Step 2: Calculate the score of the hit.
-        score = stringDistance(searchTerm, word)
+        score = stringDistance(searchTerm, matchPhrase)
 
         //Step 3: Get the title of the document.
         title = doc.title;
 
         //Store in the results array.
-        results.push({"hit":word, "title":title, "score":score, "kwic":hitStr});
+        results.push({"hit":matchPhrase, "title":title, "score":score, "kwic":hitStr});
       }
     })
   })
@@ -166,7 +186,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 function stringDistance(a, b){
+  //Strip punctuation and digits
+  a = a.replace(/[\u{0000}-\u{001F}\u{0021}-\u{0040}\u{005B}-\u{0060}\u{007B}-\u{007E}]/gu, "")
+  b = b.replace(/[\u{0000}-\u{001F}\u{0021}-\u{0040}\u{005B}-\u{0060}\u{007B}-\u{007E}]/gu, "")
 
+  //Then do algorithm
   if(a.length == 0) return b.length;
   if(b.length == 0) return a.length;
 
