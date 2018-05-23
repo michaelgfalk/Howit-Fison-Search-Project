@@ -75,7 +75,7 @@ function convertSearchTerm(searchTerm) {
       regexStr += "rr";
       break;
       case "S":
-      regexStr += ".+\\s";
+      regexStr += ".*\\s";
       break;
       default:
       //If no sound transformation has been performed on a particular character, then it is included untransformed in the regex.
