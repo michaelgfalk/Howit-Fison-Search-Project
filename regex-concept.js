@@ -6,7 +6,10 @@ function runSearch() {
   searchTerm = document.getElementById("searchTerm").value;
   findMatches(howFisCorpus, searchTerm, 10);
   //Then scroll back to the top of the page.
-  window.scroll(0, 0);
+  window.scroll({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
 //Function 2: turns the user's search term into a regex according to the given sound equivalences.
