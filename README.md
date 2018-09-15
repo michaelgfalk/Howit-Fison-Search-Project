@@ -2,7 +2,7 @@
 A search engine that can be used to find Australian words in the Howitt-Fison Corpus, even though their spelling is inconsistent.
 
 ## Getting Started
-To use the search engine on your local machine, you need to have installed python (or something else that allows you to simulate a web server). You will also need a folder called 'howFisPapers' that contains the latest export from the Howitt-Fison Corpus, as listed in the 'ingest-corpus.js' file. This folder needs to be in the same place as the code in this repository.
+To use the search engine on your local machine, you need to have installed python (or something else that allows you to simulate a web server). You will also need a folder called 'HowFisPapers' that contains the latest export from the Howitt-Fison Corpus, as listed in the 'ingest-corpus.js' file. This folder needs to be in the same place as the code in this repository.
 
 Find the directory where you have stored the code from this project along with the Howitt-Fison papers, and then simulate a web server on your machine:
 
