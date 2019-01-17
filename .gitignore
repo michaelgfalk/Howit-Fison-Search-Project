@@ -5,3 +5,4 @@
 *.json
 *.xlsx
 *.xls
+!crf_trained.p
