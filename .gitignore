@@ -1,2 +1,7 @@
 *.xhtml
 .Rproj.user
+*.csv
+*.p
+*.json
+*.xlsx
+*.xls
